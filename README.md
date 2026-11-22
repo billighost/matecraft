@@ -9,6 +9,7 @@ Built with React, TypeScript, Vite, Tailwind CSS, Express, and chess.js. Optiona
 ## What you can do
 
 - **Scan public Chess.com archives:** download recent monthly archives in parallel and find games that ended in checkmate.
+- **Choose your date range:** scan 1, 3, 6, 12, or 24 months, all time, or an inclusive custom range using the calendar.
 - **Explore the Checkmate Codex:** study 38 checkmate entries with board examples, explanations, and geometry-based rarity scores.
 - **Review games move by move:** inspect evaluations, suggested moves, opening ideas, tactical highlights, and accuracy estimates.
 - **Practice on the board:** play variations and try checkmate drills with customizable boards, piece sets, and sound effects.
@@ -16,6 +17,8 @@ Built with React, TypeScript, Vite, Tailwind CSS, Express, and chess.js. Optiona
 - **Ask the AI coach:** get position explanations and study takeaways when a server-side Gemini key is configured.
 
 The built-in evaluator uses a lightweight heuristic search. Evaluations, win probabilities, accuracy, and rarity scores are study aids; they are not Stockfish analysis or verified claims that a checkmate is historically unique.
+
+Archive downloads run up to 12 months at once, with cached downloads and analysis. Background workers handle archive parsing and game review so controls stay responsive. Archive tabs update immediately, show skeletons while results update, and initially display 24 games with a Load more control. Completed Studio reviews are cached when you revisit them.
 
 ## Run locally
 

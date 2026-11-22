@@ -38,7 +38,6 @@ import {
   PieceType,
 } from '../types/chess';
 import {
-  analyzeGameProgressive,
   evaluatePosition,
   inspectPositionTactics,
   parseGameSkeleton,
@@ -50,6 +49,7 @@ import { BOARD_THEMES, PIECE_SETS } from './BoardThemes';
 import { InteractiveBoard } from './InteractiveBoard';
 import { EvalChart } from './EvalChart';
 import { soundEngine } from '../utils/soundEngine';
+import { analyzeGameInBackground, getCachedGameReview } from '../utils/gameReviewAnalysis';
 
 interface GameReviewStudioProps {
   game: AnalyzedGame;
@@ -87,24 +87,28 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
   onChangePieceSet,
   onBack,
 }) => {
-  // Non-blocking progressive game analysis — Studio opens in <5ms with ZERO UI freeze!
-  const [review, setReview] = useState<FullGameReview>(() => parseGameSkeleton(game.pgn));
+  const initialAnalysis = useMemo(() => {
+    const cached = getCachedGameReview(game.pgn);
+    const initialReview = cached ?? parseGameSkeleton(game.pgn);
+    return { review: initialReview, isDone: Boolean(cached) || initialReview.moves.length === 0 };
+  }, [game.pgn]);
+  const [review, setReview] = useState<FullGameReview>(initialAnalysis.review);
   const [analysisProgress, setAnalysisProgress] = useState<{
     done: number;
     total: number;
     isDone: boolean;
   }>(() => {
-    const sk = parseGameSkeleton(game.pgn);
-    return { done: 0, total: sk.moves.length, isDone: sk.moves.length === 0 };
+    const total = initialAnalysis.review.moves.length;
+    return { done: initialAnalysis.isDone ? total : 0, total, isDone: initialAnalysis.isDone };
   });
 
   const totalPlies = review.moves.length;
 
   // For normal games start on final move; for 1-move Codex drills start on ply 0 so user can play the mate!
   const [currentPly, setCurrentPly] = useState<number>(() => {
-    const sk = parseGameSkeleton(game.pgn);
-    if (game.id.startsWith('codex-') && sk.moves.length === 1) return 0;
-    return sk.moves.length;
+    const total = initialAnalysis.review.moves.length;
+    if (game.id.startsWith('codex-') && total === 1) return 0;
+    return total;
   });
   const [orientation, setOrientation] = useState<PieceColor>(game.userColor);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
@@ -130,11 +134,15 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
 
   const movesContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Reset & start non-blocking progressive chunked analysis whenever the game changes
+  // Reset immediately, then deepen the review in a worker or reuse a completed review.
   useEffect(() => {
-    const skeleton = parseGameSkeleton(game.pgn);
+    const skeleton = initialAnalysis.review;
     setReview(skeleton);
-    setAnalysisProgress({ done: 0, total: skeleton.moves.length, isDone: skeleton.moves.length === 0 });
+    setAnalysisProgress({
+      done: initialAnalysis.isDone ? skeleton.moves.length : 0,
+      total: skeleton.moves.length,
+      isDone: initialAnalysis.isDone,
+    });
     setCurrentPly(game.id.startsWith('codex-') && skeleton.moves.length === 1 ? 0 : skeleton.moves.length);
     setOrientation(game.userColor);
     setVariationHistory([]);
@@ -143,13 +151,13 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
     setGmError(null);
     setAutoReplyEnabled(false);
 
-    const cancel = analyzeGameProgressive(game.pgn, (partialReview, analyzedPlies, total, isDone) => {
+    const cancel = analyzeGameInBackground(game.pgn, (partialReview, analyzedPlies, total, isDone) => {
       setReview(partialReview);
       setAnalysisProgress({ done: analyzedPlies, total, isDone });
     });
 
     return cancel;
-  }, [game.id, game.pgn, game.userColor]);
+  }, [game.id, game.pgn, game.userColor, initialAnalysis]);
 
   const isExploringVariation = variationHistory.length > 0;
   const activeReviewMove = currentPly > 0 ? review.moves[currentPly - 1] : null;
@@ -166,7 +174,7 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
   }, [variationHistory, currentPly, review.moves, game.finalFen]);
 
   // Build repetition history keys so the engine NEVER suggests back-and-forth repeating loops!
-  const recentPositionKeys = useMemo(() => {
+  const recentPositionSignature = useMemo(() => {
     const keys = new Set<string>();
     const startFen = review.moves[0]?.fenBefore ?? game.finalFen;
     keys.add(positionKeyFromFen(startFen));
@@ -176,8 +184,12 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
     for (const v of variationHistory) {
       keys.add(positionKeyFromFen(v.fen));
     }
-    return keys;
+    return [...keys].join('\n');
   }, [review.moves, game.finalFen, currentPly, variationHistory]);
+  const recentPositionKeys = useMemo(
+    () => new Set(recentPositionSignature.split('\n')),
+    [recentPositionSignature],
+  );
 
   // Active last move highlight
   const activeLastMove = useMemo(() => {
@@ -191,17 +203,17 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
     return null;
   }, [variationHistory, activeReviewMove]);
 
-  // Live position evaluation + 3-ply Principal Variation (repetition-aware!)
+  const needsLiveEvaluation = isExploringVariation || currentPly === 0 || currentPly === totalPlies
+    || !analysisProgress.isDone || !activeReviewMove;
+  // Progress updates change move annotations, not this board position. Reuse its search.
+  const positionEvaluation = useMemo(
+    () => evaluatePosition(activeFen, needsLiveEvaluation ? 2 : 1, recentPositionKeys, true),
+    [activeFen, needsLiveEvaluation, recentPositionKeys],
+  );
+
+  // Live position evaluation and repetition-aware principal variation.
   const liveEval = useMemo(() => {
-    if (
-      isExploringVariation ||
-      currentPly === 0 ||
-      currentPly === totalPlies ||
-      !analysisProgress.isDone ||
-      !activeReviewMove
-    ) {
-      return evaluatePosition(activeFen, 2, recentPositionKeys, true);
-    }
+    if (needsLiveEvaluation) return positionEvaluation;
 
     const nextBest =
       currentPly < totalPlies && review.moves[currentPly]?.bestMoveFrom && review.moves[currentPly]?.bestMoveTo
@@ -213,7 +225,7 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
         : null;
 
     // Fast 1-ply PV extraction so user always gets a clickable continuation line!
-    const quickPv = evaluatePosition(activeFen, 1, recentPositionKeys, true);
+    const quickPv = positionEvaluation;
     return {
       evalCp: activeReviewMove.evalCpAfter,
       evalLabel: activeReviewMove.evalLabel,
@@ -222,7 +234,8 @@ export const GameReviewStudio: React.FC<GameReviewStudioProps> = ({
       pvLine: quickPv.pvLine,
     };
   }, [
-    isExploringVariation,
+    needsLiveEvaluation,
+    positionEvaluation,
     currentPly,
     totalPlies,
     analysisProgress.isDone,

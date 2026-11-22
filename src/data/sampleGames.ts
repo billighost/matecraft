@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js';
 import { AnalyzedGame, PieceColor } from '../types/chess';
-import { classifyCheckmate, formatFullGameTimestamp } from '../engine/checkmateClassifier';
+import { classifyCheckmate, formatFullGameTimestamp, type ClassifyLastMove } from '../engine/checkmateClassifier';
 import { detectOpening } from '../engine/openings';
 
 interface RawSampleGame {
@@ -185,6 +185,8 @@ export function parseRawGameToAnalyzed(
 ): AnalyzedGame {
   const chess = new Chess();
   let lastMove: { from: string; to: string; san: string } | undefined;
+  let classificationLastMove: ClassifyLastMove | undefined;
+  let totalPlies = 0;
   let totalMoves = 0;
   let endedByCheckmate = false;
   let winnerColor: PieceColor | null = null;
@@ -193,11 +195,16 @@ export function parseRawGameToAnalyzed(
   try {
     chess.loadPgn(raw.pgn);
     const hist = chess.history({ verbose: true });
+    totalPlies = hist.length;
     totalMoves = Math.ceil(hist.length / 2);
     sanList = hist.map((m) => m.san);
     if (hist.length > 0) {
       const last = hist[hist.length - 1];
       lastMove = { from: last.from, to: last.to, san: last.san };
+      classificationLastMove = {
+        from: last.from, to: last.to, san: last.san,
+        piece: last.piece, flags: last.flags, promotion: last.promotion,
+      };
     }
     endedByCheckmate = chess.isCheckmate();
     if (endedByCheckmate) {
@@ -217,7 +224,9 @@ export function parseRawGameToAnalyzed(
   }
 
   const userWon = winnerColor !== null && winnerColor === userColor;
-  const checkmate = endedByCheckmate ? classifyCheckmate({ pgn: raw.pgn }) : null;
+  const checkmate = endedByCheckmate
+    ? classifyCheckmate({ fen: chess.fen(), totalPlies, lastMove: classificationLastMove })
+    : null;
   const opening = detectOpening(sanList.slice(0, 12));
 
   return {

@@ -150,10 +150,12 @@ export const app = express();
       );
 
       const games = results.flatMap((r) => r.games);
+      const failedUrls = results.filter((r) => !r.ok).map((r) => r.url);
       res.json({
         fetchedCount: results.filter((r) => r.ok).length,
         totalRequested: validUrls.length,
         games,
+        ...(failedUrls.length > 0 ? { failedUrls } : {}),
       });
     } catch (err) {
       console.error('Chess.com batch fetch error:', err);

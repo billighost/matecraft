@@ -165,6 +165,15 @@ export function formatFullGameTimestamp(epochSeconds?: number, pgn?: string): st
   return 'Date unavailable';
 }
 
+export interface ClassifyLastMove {
+  san: string;
+  from: Square;
+  to: Square;
+  piece: PieceSymbol;
+  flags: string;
+  promotion?: PieceSymbol;
+}
+
 export interface ClassifyInput {
   pgn?: string;
   fen?: string;
@@ -172,6 +181,7 @@ export interface ClassifyInput {
   lastMoveFrom?: string;
   lastMoveTo?: string;
   totalPlies?: number;
+  lastMove?: ClassifyLastMove;
 }
 
 /**
@@ -179,14 +189,7 @@ export interface ClassifyInput {
  */
 export function classifyCheckmate(input: ClassifyInput): CheckmateAnalysis | null {
   const chess = new Chess();
-  let lastMove: {
-    san: string;
-    from: Square;
-    to: Square;
-    piece: PieceSymbol;
-    flags: string;
-    promotion?: PieceSymbol;
-  } | null = null;
+  let lastMove: ClassifyLastMove | null = input.lastMove ?? null;
   let totalPlies = input.totalPlies ?? 0;
 
   if (input.pgn) {

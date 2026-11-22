@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useDeferredValue, useMemo, useState } from 'react';
 import { ArrowUpRight, Search, SlidersHorizontal } from 'lucide-react';
 import { AnalyzedGame, BoardThemeId, PieceSetId } from '../types/chess';
 import { MiniChessboard } from './MiniChessboard';
@@ -21,6 +21,35 @@ interface ArchiveDashboardProps {
 
 type FilterMode = 'all-mates' | 'my-mates' | 'opponent-mates' | 'rare' | 'all-games';
 
+const GAMES_PER_PAGE = 24;
+
+function ArchiveCardSkeletons() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5" aria-hidden="true">
+      {Array.from({ length: 6 }, (_, index) => (
+        <div key={index} className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114] flex flex-col sm:flex-row overflow-hidden animate-pulse motion-reduce:animate-none">
+          <div className="sm:w-44 md:w-48 shrink-0 p-3 sm:p-3.5 sm:border-r border-b sm:border-b-0 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60">
+            <div className="aspect-square w-full max-w-[210px] sm:max-w-none mx-auto bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-3 mt-3 w-2/3 bg-zinc-200 dark:bg-zinc-800" />
+          </div>
+          <div className="flex-1 min-w-0 p-3.5 sm:p-5 space-y-3">
+            <div className="h-3 w-1/2 bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-6 w-3/4 bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-3 w-5/6 bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-3 w-2/3 bg-zinc-200 dark:bg-zinc-800" />
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+              <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-800" />
+              <div className="h-3 w-5/6 bg-zinc-200 dark:bg-zinc-800" />
+              <div className="h-3 w-3/4 bg-zinc-200 dark:bg-zinc-800" />
+            </div>
+            <div className="h-8 w-28 ml-auto bg-zinc-200 dark:bg-zinc-800" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
   username,
   isSample,
@@ -37,6 +66,16 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
   const [filterMode, setFilterMode] = useState<FilterMode>('all-mates');
   const [searchQuery, setSearchQuery] = useState('');
   const [showStyleBar, setShowStyleBar] = useState(false);
+  const [pagination, setPagination] = useState({ games, count: GAMES_PER_PAGE });
+  const visibleCount = pagination.games === games ? pagination.count : GAMES_PER_PAGE;
+  const selectedFilters = useMemo(() => ({ filterMode, searchQuery }), [filterMode, searchQuery]);
+  const renderedFilters = useDeferredValue(selectedFilters);
+  const isFiltering = selectedFilters !== renderedFilters;
+
+  const selectFilter = (mode: FilterMode) => {
+    setFilterMode(mode);
+    setPagination({ games, count: GAMES_PER_PAGE });
+  };
 
   const stats = useMemo(() => {
     const mateGames = games.filter((g) => g.endedByCheckmate && g.checkmate);
@@ -76,23 +115,21 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
       signatureMate,
       fastestMoves: fastestMate ? `${fastestMate.totalMoves} moves` : '—',
       uniquePatternCount: uniquePatternIds.size,
+      gamesByFilter: {
+        'all-mates': games.filter((g) => g.endedByCheckmate),
+        'my-mates': games.filter((g) => g.endedByCheckmate && g.userWon),
+        'opponent-mates': games.filter((g) => g.endedByCheckmate && !g.userWon),
+        rare: rareMates,
+        'all-games': games,
+      } satisfies Record<FilterMode, AnalyzedGame[]>,
     };
   }, [games]);
 
   const filteredGames = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return games.filter((g) => {
-      if (filterMode === 'all-mates' && !g.endedByCheckmate) return false;
-      if (filterMode === 'my-mates' && (!g.endedByCheckmate || !g.userWon)) return false;
-      if (filterMode === 'opponent-mates' && (!g.endedByCheckmate || g.userWon)) return false;
-      if (
-        filterMode === 'rare' &&
-        (!g.checkmate || (!g.checkmate.isUncharted && g.checkmate.uniquenessScore < 68))
-      ) {
-        return false;
-      }
-
-      if (!q) return true;
+    const q = renderedFilters.searchQuery.trim().toLowerCase();
+    const candidates = stats.gamesByFilter[renderedFilters.filterMode];
+    if (!q) return candidates;
+    return candidates.filter((g) => {
       const haystack = [
         g.checkmate?.patternName ?? '',
         g.checkmate?.aka ?? '',
@@ -105,7 +142,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [games, filterMode, searchQuery]);
+  }, [stats, renderedFilters]);
 
   return (
     <section
@@ -232,7 +269,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
 
       {/* Filter Segmented Bar & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-6">
-        <div className="flex flex-wrap items-center gap-1 p-1 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950">
+        <div role="tablist" aria-label="Archive game filters" className="flex flex-wrap items-center gap-1 p-1 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950">
           {(
             [
               { id: 'all-mates', label: `All Mates (${stats.totalMates})` },
@@ -245,9 +282,24 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
             <button
               key={tab.id}
               type="button"
+              role="tab"
+              id={`archive-tab-${tab.id}`}
+              aria-selected={filterMode === tab.id}
+              aria-controls="archive-filtered-games"
+              tabIndex={filterMode === tab.id ? 0 : -1}
+              onKeyDown={(event) => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                const tabs = Array.from(event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+                const index = tabs.indexOf(event.currentTarget);
+                const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+                  : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+                event.preventDefault();
+                tabs[nextIndex].focus();
+                tabs[nextIndex].click();
+              }}
               onClick={() => {
                 soundEngine.play('click');
-                setFilterMode(tab.id);
+                selectFilter(tab.id);
               }}
               className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-mono transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 filterMode === tab.id
@@ -265,7 +317,10 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
           <input
             type="search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPagination({ games, count: GAMES_PER_PAGE });
+            }}
             placeholder="Filter mate, opponent, opening..."
             aria-label="Filter analyzed games"
             className="w-full pl-9 pr-3 py-2 text-xs font-mono bg-white dark:bg-[#111114] border border-zinc-300 dark:border-zinc-800 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-300"
@@ -273,8 +328,18 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
         </div>
       </div>
 
-      {/* Empty Filter State */}
-      {filteredGames.length === 0 ? (
+      <div
+        id="archive-filtered-games"
+        role="tabpanel"
+        aria-labelledby={`archive-tab-${filterMode}`}
+        aria-busy={isFiltering}
+      >
+      {isFiltering ? (
+        <>
+          <span role="status" className="sr-only">Loading matching games.</span>
+          <ArchiveCardSkeletons />
+        </>
+      ) : filteredGames.length === 0 ? (
         <div className="py-14 px-4 sm:px-6 text-center border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114]">
           <p className="text-base font-display font-semibold">No matching games in this filter.</p>
           <p className="text-xs font-mono text-zinc-500 dark:text-zinc-400 mt-1.5">
@@ -283,7 +348,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
           <button
             type="button"
             onClick={() => {
-              setFilterMode('all-mates');
+              selectFilter('all-mates');
               setSearchQuery('');
             }}
             className="mt-4 px-4 py-2 text-xs font-mono border border-zinc-900 dark:border-zinc-200 hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-950 transition-colors cursor-pointer"
@@ -294,7 +359,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
       ) : (
         /* Architectural Game Cards Grid */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-          {filteredGames.map((game) => {
+          {filteredGames.slice(0, visibleCount).map((game) => {
             const mate = game.checkmate;
             const opponent = game.userColor === 'w' ? game.black : game.white;
             const userPlayer = game.userColor === 'w' ? game.white : game.black;
@@ -414,6 +479,21 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
           })}
         </div>
       )}
+      {!isFiltering && filteredGames.length > 0 && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-zinc-500 dark:text-zinc-400">
+          <span>Showing {Math.min(visibleCount, filteredGames.length)} of {filteredGames.length} matching games</span>
+          {visibleCount < filteredGames.length && (
+            <button
+              type="button"
+              onClick={() => setPagination({ games, count: visibleCount + GAMES_PER_PAGE })}
+              className="px-4 py-2 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 hover:border-zinc-900 dark:hover:border-zinc-300 transition-colors cursor-pointer"
+            >
+              Load more games
+            </button>
+          )}
+        </div>
+      )}
+      </div>
     </section>
   );
 };

@@ -17,6 +17,7 @@ import { ArchiveDashboard } from './components/ArchiveDashboard';
 import { GameReviewStudio } from './components/GameReviewStudio';
 import { CheckmateCodex } from './components/CheckmateCodex';
 import { soundEngine } from './utils/soundEngine';
+import { ArchiveDateRange, DateRangePicker, formatArchiveDateRange } from './components/DateRangePicker';
 
 type AppView = 'analyzer' | 'codex' | 'studio';
 
@@ -49,7 +50,10 @@ export default function App() {
 
   // Username Form & Parallel Fetch State
   const [usernameInput, setUsernameInput] = useState('');
-  const [monthsToScan, setMonthsToScan] = useState<number>(6);
+  const [scanPeriod, setScanPeriod] = useState('6');
+  const monthsToScan = scanPeriod === 'custom' ? 0 : Number(scanPeriod);
+  const [dateRange, setDateRange] = useState<ArchiveDateRange | null>(null);
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchProgress, setFetchProgress] = useState<FetchProgress | null>(null);
@@ -109,6 +113,11 @@ export default function App() {
       setFormError('Chess.com usernames only contain letters, numbers, underscores, and hyphens.');
       return;
     }
+    if (scanPeriod === 'custom' && !dateRange) {
+      setFormError('Choose and apply a start and end date for your custom range.');
+      setShowDateRangePicker(true);
+      return;
+    }
 
     soundEngine.play('click');
     setFormError(null);
@@ -118,7 +127,7 @@ export default function App() {
     try {
       const result = await fetchAndAnalyzeChessComUser(trimmed, monthsToScan, (prog) => {
         setFetchProgress(prog);
-      });
+      }, scanPeriod === 'custom' ? dateRange ?? undefined : undefined);
 
       setAnalyzedUsername(result.profile.username);
       setAnalyzedGames(result.games);
@@ -383,14 +392,22 @@ export default function App() {
                         />
 
                         <select
-                          aria-label="Archive depth in months"
-                          value={monthsToScan}
-                          onChange={(e) => setMonthsToScan(Number(e.target.value))}
+                          aria-label="Archive date period"
+                          value={scanPeriod}
+                          onChange={(e) => {
+                            setScanPeriod(e.target.value);
+                            setShowDateRangePicker(e.target.value === 'custom');
+                            setFormError(null);
+                          }}
                           className="h-12 px-3.5 text-xs font-mono bg-white dark:bg-[#111114] border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-zinc-950 dark:focus:border-zinc-200 cursor-pointer shrink-0"
                         >
-                          <option value={3}>Last 3 mo</option>
-                          <option value={6}>Last 6 mo</option>
-                          <option value={12}>Last 12 mo</option>
+                          <option value="1">Last month</option>
+                          <option value="3">Last 3 months</option>
+                          <option value="6">Last 6 months</option>
+                          <option value="12">Last year</option>
+                          <option value="24">Last 2 years</option>
+                          <option value="0">All time</option>
+                          <option value="custom">Custom dates…</option>
                         </select>
 
                         <button
@@ -402,6 +419,27 @@ export default function App() {
                           <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
+
+                      {scanPeriod === 'custom' && showDateRangePicker && (
+                        <DateRangePicker
+                          value={dateRange}
+                          onApply={(range) => {
+                            setDateRange(range);
+                            setShowDateRangePicker(false);
+                            setFormError(null);
+                          }}
+                          onCancel={() => {
+                            setShowDateRangePicker(false);
+                            if (!dateRange) setScanPeriod('6');
+                          }}
+                        />
+                      )}
+                      {scanPeriod === 'custom' && dateRange && !showDateRangePicker && (
+                        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114] text-xs">
+                          <span className="font-mono text-zinc-600 dark:text-zinc-300">{formatArchiveDateRange(dateRange)}</span>
+                          <button type="button" onClick={() => setShowDateRangePicker(true)} className="underline underline-offset-4 text-zinc-900 dark:text-white cursor-pointer">Edit dates</button>
+                        </div>
+                      )}
 
                       {formError && (
                         <p role="alert" className="text-xs font-mono text-red-600 dark:text-red-400">

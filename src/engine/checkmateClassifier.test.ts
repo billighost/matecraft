@@ -105,3 +105,9 @@ test('all curated sample games are legal PGNs ending in checkmate', () => {
     assert.ok(g.fullTimestamp.includes('UTC'), `Sample game ${g.id} missing full timestamp`);
   }
 });
+
+test('classification from a parsed archive position matches full PGN analysis', () => {
+  for (const game of buildSampleGames()) {
+    assert.deepEqual(game.checkmate, classifyCheckmate({ pgn: game.pgn }), game.id);
+  }
+});
