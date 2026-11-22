@@ -1,0 +1,8 @@
+{
+  "name": "Matecraft",
+  "description": "Analyze your Chess.com games in parallel to uncover checkmate patterns, rare one-of-a-kind mates, real-time win probability, opening suggestions, and grandmaster coaching.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
