@@ -2,6 +2,8 @@
 
 Find the checkmates hidden in your Chess.com archive, understand their patterns, and replay your games in an interactive study studio.
 
+[**Open Matecraft**](https://matecraft-beige.vercel.app) · [Try the sample archive](https://matecraft-beige.vercel.app/?autostart=1)
+
 Built with React, TypeScript, Vite, Tailwind CSS, Express, and chess.js. Optional AI explanations use Google's Gemini API from the server.
 
 ## What you can do
