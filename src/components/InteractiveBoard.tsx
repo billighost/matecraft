@@ -14,6 +14,8 @@ interface InteractiveBoardProps {
   lastMove?: { from: string; to: string } | null;
   bestMoveArrow?: { from: string; to: string } | null;
   showBestMoveArrow?: boolean;
+  hangingSquares?: string[];
+  showThreats?: boolean;
   interactive?: boolean;
   onMoveAttempt?: (from: string, to: string, promotion?: PieceType) => boolean;
 }
@@ -44,6 +46,8 @@ export const InteractiveBoard: React.FC<InteractiveBoardProps> = ({
   lastMove,
   bestMoveArrow,
   showBestMoveArrow = true,
+  hangingSquares = [],
+  showThreats = false,
   interactive = true,
   onMoveAttempt,
 }) => {
@@ -373,6 +377,17 @@ export const InteractiveBoard: React.FC<InteractiveBoardProps> = ({
                     boxShadow: isCheckmate
                       ? 'inset 0 0 0 3px rgba(220,38,38,0.95)'
                       : 'inset 0 0 0 2px rgba(220,38,38,0.75)',
+                  }}
+                />
+              )}
+
+              {/* Undefended / Hanging Piece Threat Indicator */}
+              {showThreats && !isCheckedKing && hangingSquares.includes(sq) && (
+                <span
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundColor: 'rgba(217, 119, 6, 0.24)',
+                    boxShadow: 'inset 0 0 0 2px rgba(217, 119, 6, 0.9)',
                   }}
                 />
               )}

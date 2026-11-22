@@ -24,7 +24,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ isDark, onToggle }) =>
       onClick={handleClick}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to Chalk Light Mode' : 'Switch to Obsidian Dark Mode'}
-      className="group relative inline-flex items-center gap-2.5 h-10 px-3 border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 hover:border-zinc-900 dark:hover:border-zinc-400 transition-colors spring-btn cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:focus-visible:outline-zinc-100"
+      className="group relative inline-flex items-center justify-center gap-2 h-9 w-9 sm:w-auto sm:h-10 sm:px-3 border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 hover:border-zinc-900 dark:hover:border-zinc-400 transition-colors spring-btn cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:focus-visible:outline-zinc-100"
     >
       {/* Dual-tone miniature chessboard slider track */}
       <span className="relative flex items-center justify-center w-6 h-6 overflow-hidden">

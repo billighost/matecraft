@@ -111,28 +111,28 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
     <section
       id="archive-results"
       aria-label="Analyzed Chess.com Archive"
-      className="scroll-mt-20 w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 py-10 border-t border-zinc-200 dark:border-zinc-800"
+      className="scroll-mt-20 w-full max-w-[1320px] mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-10 border-t border-zinc-200 dark:border-zinc-800"
     >
       {/* Archive Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-        <div>
-          <p className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-6 sm:mb-8">
+        <div className="min-w-0">
+          <p className="text-[11px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400">
             {isSample ? 'Curated Sample GM Archive' : 'Live Chess.com Parallel Scan'} · {totalGamesScanned} games scanned
             {durationMs > 0 ? ` in ${(durationMs / 1000).toFixed(2)}s` : ''}
           </p>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1">
+          <h2 className="text-xl sm:text-3xl font-bold tracking-tight mt-1 break-words">
             {username}’s Checkmate Ledger
           </h2>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => {
               soundEngine.play('click');
               setShowStyleBar((v) => !v);
             }}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-mono border border-zinc-300 dark:border-zinc-800 hover:border-zinc-900 dark:hover:border-zinc-300 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] sm:text-xs font-mono border border-zinc-300 dark:border-zinc-800 hover:border-zinc-900 dark:hover:border-zinc-300 transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             Board Style
@@ -143,16 +143,16 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
               soundEngine.play('click');
               onOpenCodex();
             }}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-mono bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-[11px] sm:text-xs font-mono bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap shrink-0"
           >
-            Codex ({stats.uniquePatternCount}/38 Unlocked)
+            Codex ({stats.uniquePatternCount}/38)
           </button>
         </div>
       </div>
 
       {/* Optional inline Board & Piece Quick Customizer */}
       {showStyleBar && (
-        <div className="mb-8 p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114] grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="mb-6 sm:mb-8 p-3.5 sm:p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114] grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <div className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mb-2">
               Board Theme
@@ -166,7 +166,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
                     soundEngine.play('click');
                     onChangeBoardTheme(t.id);
                   }}
-                  className={`px-2.5 py-1.5 text-xs font-mono border cursor-pointer transition-colors ${
+                  className={`px-2.5 py-1.5 text-[11px] sm:text-xs font-mono border cursor-pointer transition-colors ${
                     boardTheme === t.id
                       ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
                       : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-500'
@@ -190,7 +190,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
                     soundEngine.play('click');
                     onChangePieceSet(ps.id);
                   }}
-                  className={`px-2.5 py-1.5 text-xs font-mono border cursor-pointer transition-colors ${
+                  className={`px-2.5 py-1.5 text-[11px] sm:text-xs font-mono border cursor-pointer transition-colors ${
                     pieceSet === ps.id
                       ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-900 dark:border-zinc-100'
                       : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-500'
@@ -205,41 +205,41 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
       )}
 
       {/* Architectural 5-Column KPI Strip (No nested cards — clean 1px hairlines) */}
-      <div className="grid grid-cols-2 md:grid-cols-5 border border-zinc-200 dark:border-zinc-800 divide-y md:divide-y-0 md:divide-x divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-[#111114] mb-8">
-        <div className="p-4">
-          <div className="text-xs font-mono text-zinc-500 dark:text-zinc-400">Mates Delivered</div>
-          <div className="text-2xl font-display font-bold mt-1 tabular-nums">{stats.myMatesCount}</div>
+      <div className="grid grid-cols-2 md:grid-cols-5 border border-zinc-200 dark:border-zinc-800 divide-y md:divide-y-0 md:divide-x divide-zinc-200 dark:divide-zinc-800 bg-white dark:bg-[#111114] mb-6 sm:mb-8">
+        <div className="p-3 sm:p-4">
+          <div className="text-[11px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400">Mates Delivered</div>
+          <div className="text-xl sm:text-2xl font-display font-bold mt-1 tabular-nums">{stats.myMatesCount}</div>
         </div>
-        <div className="p-4">
-          <div className="text-xs font-mono text-zinc-500 dark:text-zinc-400">Suffered</div>
-          <div className="text-2xl font-display font-bold mt-1 tabular-nums">{stats.oppMatesCount}</div>
+        <div className="p-3 sm:p-4 border-l border-zinc-200 dark:border-zinc-800 md:border-l-0">
+          <div className="text-[11px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400">Suffered</div>
+          <div className="text-xl sm:text-2xl font-display font-bold mt-1 tabular-nums">{stats.oppMatesCount}</div>
         </div>
-        <div className="p-4">
-          <div className="text-xs font-mono text-zinc-500 dark:text-zinc-400">Rare & Uncharted</div>
-          <div className="text-2xl font-display font-bold mt-1 tabular-nums">{stats.rareCount}</div>
+        <div className="p-3 sm:p-4">
+          <div className="text-[11px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400">Rare & Uncharted</div>
+          <div className="text-xl sm:text-2xl font-display font-bold mt-1 tabular-nums">{stats.rareCount}</div>
         </div>
-        <div className="p-4">
-          <div className="text-xs font-mono text-zinc-500 dark:text-zinc-400">Fastest Mate</div>
-          <div className="text-2xl font-display font-bold mt-1 tabular-nums">{stats.fastestMoves}</div>
+        <div className="p-3 sm:p-4 border-l border-zinc-200 dark:border-zinc-800 md:border-l-0">
+          <div className="text-[11px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400">Fastest Mate</div>
+          <div className="text-xl sm:text-2xl font-display font-bold mt-1 tabular-nums">{stats.fastestMoves}</div>
         </div>
-        <div className="p-4 col-span-2 md:col-span-1">
-          <div className="text-xs font-mono text-zinc-500 dark:text-zinc-400">Signature Weapon</div>
-          <div className="text-base font-display font-bold mt-1.5 truncate" title={stats.signatureMate}>
+        <div className="p-3 sm:p-4 col-span-2 md:col-span-1">
+          <div className="text-[11px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400">Signature Weapon</div>
+          <div className="text-base font-display font-bold mt-1 truncate" title={stats.signatureMate}>
             {stats.signatureMate}
           </div>
         </div>
       </div>
 
       {/* Filter Segmented Bar & Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-6">
         <div className="flex flex-wrap items-center gap-1 p-1 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950">
           {(
             [
               { id: 'all-mates', label: `All Mates (${stats.totalMates})` },
-              { id: 'my-mates', label: `My Mates (${stats.myMatesCount})` },
-              { id: 'opponent-mates', label: `Opponent Mates (${stats.oppMatesCount})` },
-              { id: 'rare', label: `Rare & Unique (${stats.rareCount})` },
-              { id: 'all-games', label: `All Games (${games.length})` },
+              { id: 'my-mates', label: `Mine (${stats.myMatesCount})` },
+              { id: 'opponent-mates', label: `Opponent (${stats.oppMatesCount})` },
+              { id: 'rare', label: `Rare (${stats.rareCount})` },
+              { id: 'all-games', label: `All (${games.length})` },
             ] as { id: FilterMode; label: string }[]
           ).map((tab) => (
             <button
@@ -249,7 +249,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
                 soundEngine.play('click');
                 setFilterMode(tab.id);
               }}
-              className={`px-3 py-1.5 text-xs font-mono transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-mono transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 filterMode === tab.id
                   ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white border border-zinc-300 dark:border-zinc-700 font-semibold'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 border border-transparent'
@@ -266,7 +266,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Filter by mate, opponent, opening..."
+            placeholder="Filter mate, opponent, opening..."
             aria-label="Filter analyzed games"
             className="w-full pl-9 pr-3 py-2 text-xs font-mono bg-white dark:bg-[#111114] border border-zinc-300 dark:border-zinc-800 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-300"
           />
@@ -275,7 +275,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
 
       {/* Empty Filter State */}
       {filteredGames.length === 0 ? (
-        <div className="py-16 px-6 text-center border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114]">
+        <div className="py-14 px-4 sm:px-6 text-center border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114]">
           <p className="text-base font-display font-semibold">No matching games in this filter.</p>
           <p className="text-xs font-mono text-zinc-500 dark:text-zinc-400 mt-1.5">
             Try switching to “All Mates” or clearing your search query.
@@ -293,7 +293,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
         </div>
       ) : (
         /* Architectural Game Cards Grid */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
           {filteredGames.map((game) => {
             const mate = game.checkmate;
             const opponent = game.userColor === 'w' ? game.black : game.white;
@@ -302,19 +302,21 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
             return (
               <article
                 key={game.id}
-                className="group border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114] hover:border-zinc-900 dark:hover:border-zinc-400 transition-colors flex flex-col sm:flex-row"
+                className="group border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111114] hover:border-zinc-900 dark:hover:border-zinc-400 transition-colors flex flex-col sm:flex-row overflow-hidden"
               >
                 {/* Left: Shaded Mini-Chessboard showing final checkmate geometry */}
-                <div className="sm:w-44 md:w-48 shrink-0 p-3.5 sm:border-r border-b sm:border-b-0 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between bg-zinc-50 dark:bg-zinc-950/60">
-                  <MiniChessboard
-                    fen={game.finalFen}
-                    boardTheme={boardTheme}
-                    pieceSet={pieceSet}
-                    highlightFrom={game.lastMove?.from}
-                    highlightTo={game.lastMove?.to}
-                    matedKingSquare={mate?.matedKingSquare}
-                    orientation={game.userColor}
-                  />
+                <div className="sm:w-44 md:w-48 shrink-0 p-3 sm:p-3.5 sm:border-r border-b sm:border-b-0 border-zinc-200 dark:border-zinc-800 flex flex-col justify-between bg-zinc-50 dark:bg-zinc-950/60">
+                  <div className="w-full max-w-[210px] sm:max-w-none mx-auto">
+                    <MiniChessboard
+                      fen={game.finalFen}
+                      boardTheme={boardTheme}
+                      pieceSet={pieceSet}
+                      highlightFrom={game.lastMove?.from}
+                      highlightTo={game.lastMove?.to}
+                      matedKingSquare={mate?.matedKingSquare}
+                      orientation={game.userColor}
+                    />
+                  </div>
                   <div className="mt-2.5 flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400 tabular-nums">
                     <span>{game.lastMove?.san ?? '—'}</span>
                     <span>{game.totalMoves} moves</span>
@@ -322,7 +324,7 @@ export const ArchiveDashboard: React.FC<ArchiveDashboardProps> = ({
                 </div>
 
                 {/* Right: Editorial Details, Uniqueness, Fun Fact, Goofy Quip, Full Timestamp */}
-                <div className="flex-1 min-w-0 p-4 sm:p-5 flex flex-col justify-between gap-3">
+                <div className="flex-1 min-w-0 p-3.5 sm:p-5 flex flex-col justify-between gap-3">
                   <div>
                     {/* Clean Unboxed Metadata Line (Zero Pill Discipline!) */}
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-mono text-zinc-500 dark:text-zinc-400">

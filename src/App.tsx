@@ -185,27 +185,61 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Convert any Checkmate Codex pattern into an inspectable Studio board!
+  // Convert any Checkmate Codex pattern into an inspectable, playable Studio drill!
   const handleInspectCodexPattern = (pattern: CheckmatePatternDef) => {
     const checkmate = classifyCheckmate({ fen: pattern.exampleFen });
+
+    // Try reversing the final checkmate move so the user can step back 1 ply and practice delivering it!
+    let drillPgn = `[FEN "${pattern.exampleFen}"]\n[SetUp "1"]\n*`;
+    let drillLastMove: { from: string; to: string; san: string } | undefined = pattern.exampleHighlight
+      ? { from: pattern.exampleHighlight.from, to: pattern.exampleHighlight.to, san: '#' }
+      : undefined;
+
+    if (pattern.exampleHighlight) {
+      try {
+        const finalBoard = new Chess(pattern.exampleFen);
+        const toSq = pattern.exampleHighlight.to as Parameters<Chess['get']>[0];
+        const fromSq = pattern.exampleHighlight.from as Parameters<Chess['get']>[0];
+        const matingPiece = finalBoard.get(toSq);
+        const originPiece = finalBoard.get(fromSq);
+
+        if (matingPiece && !originPiece && matingPiece.color !== finalBoard.turn()) {
+          const preBoard = new Chess(pattern.exampleFen);
+          preBoard.remove(toSq);
+          preBoard.put(matingPiece, fromSq);
+          const fenParts = preBoard.fen().split(' ');
+          fenParts[1] = matingPiece.color; // Side who delivers checkmate moves!
+          fenParts[3] = '-';
+          const candidatePreFen = fenParts.join(' ');
+
+          const verify = new Chess(candidatePreFen);
+          const mv = verify.move({ from: fromSq, to: toSq, promotion: 'q' });
+          if (mv && verify.isCheckmate()) {
+            drillPgn = `[FEN "${candidatePreFen}"]\n[SetUp "1"]\n\n1.${matingPiece.color === 'b' ? '..' : ''} ${mv.san} ${matingPiece.color === 'w' ? '1-0' : '0-1'}`;
+            drillLastMove = { from: mv.from, to: mv.to, san: mv.san };
+          }
+        }
+      } catch {
+        // Fallback to static FEN study cleanly
+      }
+    }
+
     const patternGame: AnalyzedGame = {
       id: `codex-${pattern.id}`,
       url: '',
-      pgn: `[FEN "${pattern.exampleFen}"]\n[SetUp "1"]\n*`,
-      white: { username: 'White (Codex Demo)', rating: 2500, result: 'win' },
-      black: { username: 'Black (Codex Demo)', rating: 2500, result: 'checkmated' },
+      pgn: drillPgn,
+      white: { username: 'White (Codex Study)', rating: 2500, result: 'win' },
+      black: { username: 'Black (Codex Study)', rating: 2500, result: 'checkmated' },
       endTime: Math.floor(Date.now() / 1000),
       fullTimestamp: formatFullGameTimestamp(Math.floor(Date.now() / 1000)),
       timeClass: 'study',
-      timeControl: 'Sandbox',
+      timeControl: 'Codex Drill',
       userColor: 'w',
       userWon: true,
       endedByCheckmate: Boolean(checkmate),
       winnerColor: 'w',
       finalFen: pattern.exampleFen,
-      lastMove: pattern.exampleHighlight
-        ? { from: pattern.exampleHighlight.from, to: pattern.exampleHighlight.to, san: '#' }
-        : undefined,
+      lastMove: drillLastMove,
       openingName: pattern.name,
       ecoCode: 'CODEX',
       totalMoves: 1,
@@ -224,7 +258,7 @@ export default function App() {
         howItWorks: pattern.howItWorks,
         matedKingSquare: 'g8',
         checkingPieceSquares: [],
-        matingMoveSan: '#',
+        matingMoveSan: drillLastMove?.san ?? '#',
         matingPieceType: 'q',
         totalPlies: 1,
       },
@@ -239,10 +273,10 @@ export default function App() {
   const studioGame = selectedGame ?? analyzedGames[0] ?? sampleGames[0];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#09090B] dark:bg-[#09090B] dark:text-[#F4F4F5] transition-colors duration-200">
-      {/* Strict 3-Zone Top Bar Contract */}
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#09090B] dark:bg-[#09090B] dark:text-[#F4F4F5] transition-colors duration-200 overflow-x-clip">
+      {/* Strict 3-Zone Top Bar Contract — Ultra-responsive down to 300px */}
       <header className="sticky top-0 z-40 border-b border-zinc-200 dark:border-zinc-800 bg-[#FAFAFA]/92 dark:bg-[#09090B]/92 backdrop-blur-md">
-        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-8">
+        <div className="max-w-[1400px] mx-auto px-2.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-8">
           {/* Zone 1: Single-element brand wordmark */}
           <button
             type="button"
@@ -250,7 +284,7 @@ export default function App() {
               soundEngine.play('click');
               setActiveView('analyzer');
             }}
-            className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-zinc-950 dark:text-white whitespace-nowrap shrink-0 cursor-pointer"
+            className="font-display text-base sm:text-xl font-extrabold tracking-tight text-zinc-950 dark:text-white whitespace-nowrap shrink-0 cursor-pointer"
           >
             Matecraft
           </button>
@@ -258,7 +292,7 @@ export default function App() {
           {/* Zone 2: Clean single-line text nav links */}
           <nav
             aria-label="Primary navigation"
-            className="flex items-center gap-3 sm:gap-7 text-xs sm:text-sm font-medium"
+            className="flex items-center gap-2.5 sm:gap-7 text-[11px] sm:text-sm font-medium"
           >
             {(
               [
@@ -285,7 +319,7 @@ export default function App() {
                   <span className="sm:hidden">{nav.short}</span>
                   <span className="hidden sm:inline">{nav.label}</span>
                   {isCurrent && (
-                    <span className="absolute left-0 right-0 -bottom-[21px] h-[2px] bg-zinc-950 dark:bg-white" />
+                    <span className="absolute left-0 right-0 -bottom-[17px] sm:-bottom-[21px] h-[2px] bg-zinc-950 dark:bg-white" />
                   )}
                 </button>
               );
@@ -304,20 +338,20 @@ export default function App() {
         {activeView === 'analyzer' && (
           <>
             {/* Editorial Split Hero Section */}
-            <section className="max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12 sm:pt-14 sm:pb-16">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
+            <section className="max-w-[1320px] mx-auto px-3 sm:px-6 lg:px-8 pt-7 pb-10 sm:pt-14 sm:pb-16">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-stretch">
                 {/* Left Column: Clear Instructions + Username Form + Parallel Speed Controls */}
-                <div className="lg:col-span-6 flex flex-col justify-between gap-8">
-                  <div className="space-y-5">
-                    <p className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
-                      Chess.com Checkmate Identifier · Parallel Archive Scanner · Grandmaster Review
+                <div className="lg:col-span-6 flex flex-col justify-between gap-7 sm:gap-8 min-w-0">
+                  <div className="space-y-4 sm:space-y-5">
+                    <p className="text-[11px] sm:text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                      Chess.com Checkmate Identifier · Parallel Scanner · Grandmaster Studio
                     </p>
 
-                    <h1 className="font-display text-4xl sm:text-5xl font-extrabold tracking-tight leading-[1.06] text-balance">
+                    <h1 className="font-display text-[28px] min-[360px]:text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.08] text-balance">
                       Name every checkmate you ever played—or walked right into.
                     </h1>
 
-                    <p className="text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl">
+                    <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl">
                       Enter your public Chess.com username below. We fetch your monthly archives in
                       parallel, classify every checkmate across 38+ patterns, flag rare one-of-a-kind
                       geometries, and open any game in a grandmaster board studio.
@@ -440,7 +474,7 @@ export default function App() {
                     )}
 
                     {/* 3-Step Micro-Guide */}
-                    <div className="grid grid-cols-3 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800 text-xs">
+                    <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-4 pt-5 border-t border-zinc-200 dark:border-zinc-800 text-xs">
                       <div>
                         <div className="font-mono text-zinc-400">01. Fetch</div>
                         <p className="text-zinc-700 dark:text-zinc-300 mt-1">

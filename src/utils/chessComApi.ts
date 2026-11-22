@@ -171,6 +171,19 @@ export async function fetchAndAnalyzeChessComUser(
   let checkmatesFound = 0;
 
   for (let i = 0; i < standardGames.length; i++) {
+    // Yield to browser main thread every 20 games so UI & SVG loader stay 60fps smooth
+    if (i > 0 && i % 20 === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      onProgress?.({
+        stage: 'analyzing',
+        message: `Scanning game ${i} of ${standardGames.length} for checkmate patterns...`,
+        archivesFetched: targetArchives.length,
+        archivesTotal: targetArchives.length,
+        gamesParsed: i,
+        checkmatesFound,
+      });
+    }
+
     const g = standardGames[i];
     const isLikelyCheckmate =
       g.white?.result === 'checkmated' ||

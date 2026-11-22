@@ -63,9 +63,9 @@ export const CheckmateCodex: React.FC<CheckmateCodexProps> = ({
   return (
     <section
       aria-label="Checkmate Codex Encyclopedia"
-      className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 py-10"
+      className="w-full max-w-[1320px] mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-10"
     >
-      <div className="flex flex-wrap items-end justify-between gap-4 pb-6 mb-8 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex flex-wrap items-end justify-between gap-4 pb-6 mb-6 sm:mb-8 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <p className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
             Complete Checkmate Encyclopedia · {CHECKMATE_LIBRARY.length} Archetypes Indexed
@@ -83,7 +83,7 @@ export const CheckmateCodex: React.FC<CheckmateCodexProps> = ({
       </div>
 
       {/* Category Filter & Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div className="flex flex-wrap items-center gap-1 p-1 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950">
           {CATEGORIES.map((cat) => (
             <button
@@ -93,7 +93,7 @@ export const CheckmateCodex: React.FC<CheckmateCodexProps> = ({
                 soundEngine.play('click');
                 setSelectedCategory(cat);
               }}
-              className={`px-3 py-1.5 text-xs font-mono transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-mono transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 selectedCategory === cat
                   ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white border border-zinc-300 dark:border-zinc-700 font-semibold'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 border border-transparent'
@@ -118,7 +118,7 @@ export const CheckmateCodex: React.FC<CheckmateCodexProps> = ({
       </div>
 
       {/* 3-Column Encyclopedia Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
         {filtered.map((pattern) => {
           const stats = unlockMap.get(pattern.id);
           const isUnlocked = Boolean(stats);
@@ -132,8 +132,8 @@ export const CheckmateCodex: React.FC<CheckmateCodexProps> = ({
                   : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
               }`}
             >
-              <div className="p-4 flex gap-4">
-                <div className="w-24 sm:w-28 shrink-0">
+              <div className="p-3.5 sm:p-4 flex flex-col min-[380px]:flex-row gap-3.5 sm:gap-4">
+                <div className="w-full max-w-[160px] min-[380px]:w-24 sm:w-28 mx-auto min-[380px]:mx-0 shrink-0">
                   <MiniChessboard
                     fen={pattern.exampleFen}
                     boardTheme={boardTheme}
