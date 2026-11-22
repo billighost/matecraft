@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
 import test from 'node:test';
-import app from './app';
+import app from '../api/index';
 
 test('shared API serves health, validates input, and proxies Chess.com responses', async (t) => {
   const server = app.listen(0, '127.0.0.1');

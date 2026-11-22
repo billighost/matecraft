@@ -1,7 +1,7 @@
 ﻿import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import app from './server/app';
+import app from './server/app.js';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const port = Number(process.env.PORT) || 3000;
