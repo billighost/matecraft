@@ -17,7 +17,7 @@ The built-in evaluator uses a lightweight heuristic search. Evaluations, win pro
 
 ## Run locally
 
-Requires **Node.js 22.12 or newer** and npm.
+Requires **Node.js 24 LTS** and npm.
 
 ```sh
 git clone https://github.com/billighost/matecraft.git
@@ -40,7 +40,7 @@ Core analysis and sample games work without a Gemini key. To enable the AI coach
 | `GEMINI_API_KEY` | Optional key for live AI coaching | Unset |
 | `GEMINI_MODEL` | Gemini model used by the coach | `gemini-2.5-flash` |
 
-Keep the API key on the server. Do not add a `VITE_` prefix or commit `.env` files. Without a key, the coach endpoint returns a clear configuration error; the rest of the app remains available.
+Keep the API key on the server. Do not add a `VITE_` prefix or commit `.env` files. Without a key, the coach endpoint explains that AI coaching is unavailable; the rest of the app remains available.
 
 ## Commands
 

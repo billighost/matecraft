@@ -13,7 +13,7 @@
     "test": "tsx --test src/engine/*.test.ts server/*.test.ts"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": "24.x"
   },
   "dependencies": {
     "@google/genai": "^3.6.1",
